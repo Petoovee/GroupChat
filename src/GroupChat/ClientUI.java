@@ -34,7 +34,7 @@ public class ClientUI extends JFrame {
 	private List contactList;
 	private JButton btnImage;
 	private JButton sendButton;
-
+saasaffasadafafsf
 	/**
 	 * Launch the application.
 	 */
