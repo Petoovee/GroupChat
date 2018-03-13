@@ -5,14 +5,17 @@ import java.util.HashMap;
 import GroupChat.Server.ClientHandler;
 
 public class ClientRolf {
-	private HashMap<User, Client> clients = new HashMap<User, Client>();
+	private HashMap<User, ClientHandler> clients = new HashMap<User, ClientHandler>();
 
-	public synchronized void put(User user, Client client) {
+	public synchronized void put(User user, ClientHandler client) {
 		clients.put(user, client);
+		System.out.println(clients.size());
 	}
 
-	public synchronized Client get(User user) {
-		return get(user);
+	public synchronized ClientHandler get(User user) {
+		return clients.get(user);
 	}
+
+	
 
 }

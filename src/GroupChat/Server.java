@@ -12,7 +12,7 @@ public class Server {
 	private LinkedList<ClientHandler> clients = new LinkedList<ClientHandler>();
 	private ClientRolf clientList = new ClientRolf();
 
-	private int port = 4462;
+	private int port = 4473;
 
 	public Server() {
 		serverThread = new Connect();
@@ -47,7 +47,6 @@ public class Server {
 					socket = serverSocket.accept();
 
 					clients.add(new ClientHandler(socket));
-					System.out.println(clients.size());
 					clients.getLast().start();
 				} catch (IOException e1) {
 					System.out.println("Accept failed on port");
@@ -67,43 +66,60 @@ public class Server {
 	public class ClientHandler extends Thread {
 		private Socket socket;
 		private User user;
+		private Client client;
+		private ObjectOutputStream outToClient;
+		private Message newMessage = null;
+		private Message oldMessage = null;
 
 		public ClientHandler(Socket socket) {
 			this.socket = socket;
 		}
+		
+		public User getUser() {
+			return user;
+		}
+		
+		public void sendMessage(Message mess) {
+			try {
+				outToClient.writeObject(mess);
+				outToClient.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
 		public void run() {
 			try {
-				ObjectOutputStream outToClient = new ObjectOutputStream(socket.getOutputStream());
+				outToClient = new ObjectOutputStream(socket.getOutputStream());
 				ObjectInputStream inp = new ObjectInputStream(socket.getInputStream());
 				while (!Thread.interrupted()) {
-					
-					Message mess = null;
+			
 
 					Object obj = inp.readObject();
 
 					if (obj instanceof User) {
 
 						user = (User) obj;
-
+						
 						System.out.println(user.getName() + " has connected");
 						Thread.sleep(10);
 					}
-					// else if (obj instanceof Client) {
-					// client = (Client) obj;
-					// System.out.println("pls");
-					// clientlist.put(user, this);
-					// }
-
-					else if (obj instanceof Message){
-						mess = (Message) obj;
-						System.out.println("Hej, meddelande mottaget från clienten är: " + " " + mess.toString());
-						
-						outToClient.writeObject(mess);
-					}
+					 else if (obj instanceof Client) {
+					 client = (Client) obj;
+					 
+					 clientList.put(user, this);
 					
-					outToClient.writeObject(mess);
-					Thread.sleep(1000);
+					 }
+					else if (obj instanceof Message){
+						newMessage = (Message) obj;
+						
+						if(newMessage!=oldMessage) {
+							clientList.get(newMessage.getRecievers()).sendMessage(newMessage);;
+							oldMessage=newMessage;
+						}
+					}
+					Thread.sleep(50);
 				}
 			} catch (IOException e) {
 				System.out.println("Could not read/write object");
