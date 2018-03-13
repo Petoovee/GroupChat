@@ -7,18 +7,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 
-public class Server {
+public class Server
+{
 	private Thread serverThread;
 	private LinkedList<ClientHandler> clients = new LinkedList<ClientHandler>();
 	private ClientRolf clientList = new ClientRolf();
-
-	private int port = 4473;
-
-	public Server() {
+	
+	private int portMin = 4473;
+	private int port = portMin;
+	private int portMax = 4483;
+	
+	public Server()
+	{
 		serverThread = new Connect();
 		serverThread.start();
 	}
-
+	
 	/**
 	 * 
 	 * @author Anton
@@ -27,34 +31,55 @@ public class Server {
 	 *         anslutning till klienter i clients-listan
 	 *
 	 */
-	public class Connect extends Thread {
-		public void run() {
-
+	public class Connect extends Thread
+	{
+		public void run()
+		{
+			
 			ServerSocket serverSocket = null;
 			Socket socket = null;
-
-			try {
-				serverSocket = new ServerSocket(port);
-				System.out.println("Server startad");
-			} catch (IOException e2) {
-				System.out.println("Could not listen to port");
-				System.exit(1);
+			
+			boolean attemptingToStart = true;
+			while (attemptingToStart)
+			{
+				try
+				{
+					serverSocket = new ServerSocket(port);
+					System.out.println("Server startad");
+					attemptingToStart = false;
+				}
+				catch (IOException e2)
+				{
+					System.out.println("Something failed, attempting port: " + port);
+					if (port <= portMax)
+					{
+						port++;
+					}
+					else
+					{
+						port = portMin;
+					}
+				}
 			}
-
-			while (!Thread.interrupted()) {
-				try {
-
+			
+			while (!Thread.interrupted())
+			{
+				try
+				{
+					
 					socket = serverSocket.accept();
-
+					
 					clients.add(new ClientHandler(socket));
 					clients.getLast().start();
-				} catch (IOException e1) {
+				}
+				catch (IOException e1)
+				{
 					System.out.println("Accept failed on port");
 				}
 			}
 		}
 	}
-
+	
 	/**
 	 * 
 	 * @author Anton
@@ -63,74 +88,94 @@ public class Server {
 	 *         klienten
 	 *
 	 */
-	public class ClientHandler extends Thread {
+	public class ClientHandler extends Thread
+	{
 		private Socket socket;
 		private User user;
 		private Client client;
 		private ObjectOutputStream outToClient;
 		private Message newMessage = null;
 		private Message oldMessage = null;
-
-		public ClientHandler(Socket socket) {
+		
+		public ClientHandler(Socket socket)
+		{
 			this.socket = socket;
 		}
 		
-		public User getUser() {
+		public User getUser()
+		{
 			return user;
 		}
 		
-		public void sendMessage(Message mess) {
-			try {
+		public void sendMessage(Message mess)
+		{
+			try
+			{
 				outToClient.writeObject(mess);
 				outToClient.flush();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-
-		public void run() {
-			try {
+		
+		public void run()
+		{
+			try
+			{
 				outToClient = new ObjectOutputStream(socket.getOutputStream());
 				ObjectInputStream inp = new ObjectInputStream(socket.getInputStream());
-				while (!Thread.interrupted()) {
-			
-
+				while (!Thread.interrupted())
+				{
+					
 					Object obj = inp.readObject();
-
-					if (obj instanceof User) {
-
+					
+					if (obj instanceof User)
+					{
+						
 						user = (User) obj;
 						
 						System.out.println(user.getName() + " has connected");
 						Thread.sleep(10);
 					}
-					 else if (obj instanceof Client) {
-					 client = (Client) obj;
-					 
-					 clientList.put(user, this);
-					
-					 }
-					else if (obj instanceof Message){
+					else if (obj instanceof Client)
+					{
+						client = (Client) obj;
+						
+						clientList.put(user, this);
+						
+					}
+					else if (obj instanceof Message)
+					{
 						newMessage = (Message) obj;
 						
-						if(newMessage!=oldMessage) {
-							clientList.get(newMessage.getRecievers()).sendMessage(newMessage);;
-							oldMessage=newMessage;
+						if (newMessage != oldMessage)
+						{
+							clientList.get(newMessage.getRecievers()).sendMessage(newMessage);
+							;
+							oldMessage = newMessage;
 						}
 					}
 					Thread.sleep(50);
 				}
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				System.out.println("Could not read/write object");
 				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
+			}
+			catch (InterruptedException e)
+			{
 				e.printStackTrace();
 			}
-
+			catch (ClassNotFoundException e)
+			{
+				e.printStackTrace();
+			}
+			
 		}
 	}
-
+	
 }
