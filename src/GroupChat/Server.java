@@ -36,10 +36,12 @@ public class Server {
 		serverThread = new Connect();
 		serverThread.start();
 	}
-	
+
 	/**
 	 * ger servern tillgång till ServerUI
-	 * @param ui == ServerUI
+	 * 
+	 * @param ui
+	 *            == ServerUI
 	 */
 	public void setUI(ServerUI ui) {
 		this.ui = ui;
@@ -185,8 +187,7 @@ public class Server {
 						user = (User) obj;
 						Message acceptMessage = new Message("accepted", null, null, null);
 						System.out.println(user.getImagePath());
-						
-						
+
 						// kollar om användaren finns i systemet
 						for (int i = 0; i < currentUsers.size(); i++) {
 							if (user.getName().equals(currentUsers.get(i).getName())) {
@@ -225,34 +226,34 @@ public class Server {
 					} else if (obj instanceof Message) {
 						Message newMessage = (Message) obj;
 						Date date = new Date();
-						allMessages.add(dateFormat.format(date) + " " + newMessage.getSender().getName() + ": " + newMessage.getTextMsg());
-						
+						allMessages.add(dateFormat.format(date) + " " + newMessage.getSender().getName() + ": "
+								+ newMessage.getTextMsg());
+
 						for (int i = 0; i < newMessage.getReceivers().size(); i++) {
-							if(isUserOnline(newMessage.getReceivers().get(i))){
+							if (isUserOnline(newMessage.getReceivers().get(i))) {
 								getReceiverHandler(newMessage.getReceivers().get(i)).sendMessage(newMessage);
-							}
-							else {
+							} else {
 								writeOfflineMessageToFile(newMessage.getSender().getName(),
-								newMessage.getReceivers().get(i).getName(), newMessage.getTextMsg());
+										newMessage.getReceivers().get(i).getName(), newMessage.getTextMsg());
 							}
 						}
 
-//						int numberOfReceivers = newMessage.getReceivers().size();
-//						for (int i = 0; i < numberOfReceivers; i++) {
-//							if (isUserOnline(newMessage.getReceivers().get(i))) {
-//								for (int o = 0; o < clients.size(); o++) {
-//									clients.get(o).sendOnlineUsers();
-//								}
-//							} else {
-//								writeOfflineMessageToFile(newMessage.getSender().getName(),
-//										newMessage.getReceivers().get(i).getName(), newMessage.getTextMsg());
-//							}
-//						}
+						// int numberOfReceivers = newMessage.getReceivers().size();
+						// for (int i = 0; i < numberOfReceivers; i++) {
+						// if (isUserOnline(newMessage.getReceivers().get(i))) {
+						// for (int o = 0; o < clients.size(); o++) {
+						// clients.get(o).sendOnlineUsers();
+						// }
+						// } else {
+						// writeOfflineMessageToFile(newMessage.getSender().getName(),
+						// newMessage.getReceivers().get(i).getName(), newMessage.getTextMsg());
+						// }
+						// }
 					}
-					currentUsers.remove(user); // Hopefully this won't cause invisible users, since it's ran when interrupted
+					currentUsers.remove(user); // Hopefully this won't cause invisible users, since it's ran when
+												// interrupted
 					obj = null;
 				}
-				
 
 			} catch (IOException e) {
 				currentUsers.remove(user);
@@ -281,24 +282,28 @@ public class Server {
 		}
 		return null;
 	}
-	
-	public ArrayList<User> getCurrentUsers(){
+
+	public ArrayList<User> getCurrentUsers() {
 		return currentUsers;
 	}
-	
+
 	public void sendOnlineUsersToClients() {
-		for(int i = 0; i<userList.size(); i++) {
+		for (int i = 0; i < userList.size(); i++) {
 			clientList.get(userList.get(i)).sendOnlineUsers();
 		}
 	}
-	
+
 	/**
-	 * Metoden hämtar och returnerar alla meddelanden från startpunkten till slutpunkten som skickas in
-	 * @param start == startpunkt för meddelandelistan
-	 * @param end == slutpunkt för meddelandelistan
+	 * Metoden hämtar och returnerar alla meddelanden från startpunkten till
+	 * slutpunkten som skickas in
+	 * 
+	 * @param start
+	 *            == startpunkt för meddelandelistan
+	 * @param end
+	 *            == slutpunkt för meddelandelistan
 	 * @return == ArrayList<String> med alla meddelande
 	 */
-	public ArrayList<String> getMessages(String start, String end){
+	public ArrayList<String> getMessages(String start, String end) {
 		ArrayList<String> messagesList = new ArrayList<String>();
 		String startPointString = start.replace("/", "");
 		String endPointString = end.replace("/", "");
@@ -307,17 +312,17 @@ public class Server {
 			int startPoint = Integer.parseInt(startPointString);
 			int endPoint = Integer.parseInt(endPointString);
 			int arrayPoint;
-			for(int i = 0; i<allMessages.size(); i++) {
+			for (int i = 0; i < allMessages.size(); i++) {
 				arrayPointString = allMessages.get(i).substring(0, 10).replace("/", "");
 				arrayPoint = Integer.parseInt(arrayPointString);
-				if(arrayPoint>=startPoint && arrayPoint<=endPoint) {
+				if (arrayPoint >= startPoint && arrayPoint <= endPoint) {
 					messagesList.add(allMessages.get(i));
 				}
 			}
-			if(messagesList.isEmpty()) {
+			if (messagesList.isEmpty()) {
 				messagesList.add("Inga meddelande mellan angivna datum");
 			}
-		}catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			messagesList.add("Endast siffror och snedstreck är tillåtna");
 		}
 		return messagesList;
@@ -330,30 +335,30 @@ public class Server {
 	public void writeUsersToFile() {
 		try {
 			ObjectInputStream fileInput = new ObjectInputStream(new FileInputStream(new File("files/users.txt")));
-			oldUsers = (ArrayList<User>)fileInput.readObject();
-		} catch (IOException | ClassNotFoundException e1) {}
-		
-		for(int i = 0; i < currentUsers.size(); i++)
-		{
-			if(!allUsers.contains(currentUsers.get(i))) {
+			oldUsers = (ArrayList<User>) fileInput.readObject();
+		} catch (IOException | ClassNotFoundException e1) {
+		}
+
+		for (int i = 0; i < currentUsers.size(); i++) {
+			if (!allUsers.contains(currentUsers.get(i))) {
 				allUsers.add(currentUsers.get(i));
 			}
 		}
-		
-		for(int i = 0; i < oldUsers.size(); i++)
-		{
-			if(!allUsers.contains(oldUsers.get(i))) {
+
+		for (int i = 0; i < oldUsers.size(); i++) {
+			if (!allUsers.contains(oldUsers.get(i))) {
 				allUsers.add(oldUsers.get(i));
 			}
 		}
-		
+
 		try {
 			ObjectOutputStream fileOutput = new ObjectOutputStream(new FileOutputStream(new File("files/users.txt")));
 			fileOutput.flush();
 			fileOutput.writeObject(allUsers);
 			fileOutput.flush();
 			fileOutput.close();
-		} catch (IOException e1) {}
+		} catch (IOException e1) {
+		}
 	}
 
 	/**
@@ -452,9 +457,10 @@ public class Server {
 			writer = new PrintWriter("files/offlineMessage.txt", "UTF-8");
 			writer.println(sender + "newStuff" + "receiver" + receiver + "newStuff" + message);
 			writer.close();
-		} catch (IOException e) {} 
+		} catch (IOException e) {
+		}
 	}
-	
+
 	public static void main(String[] args) {
 		Server server = new Server();
 		JFrame frame = new JFrame("Server");
@@ -464,4 +470,3 @@ public class Server {
 		frame.setVisible(true);
 	}
 }
-

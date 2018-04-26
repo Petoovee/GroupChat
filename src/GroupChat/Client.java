@@ -322,14 +322,14 @@ public class Client implements Serializable {
 	}
 
 	public static void main(String[] args) {
-//		Server server = new Server();
+		// Server server = new Server();
 		ClientUI ui = new ClientUI();
-//		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		ui.setVisible(true);
 		Client client = new Client(ui);
 
 		ClientUI ui2 = new ClientUI();
-//		ui2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// ui2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		ui2.setVisible(true);
 		Client client2 = new Client(ui2);
 	}
@@ -389,7 +389,7 @@ public class Client implements Serializable {
 					currentReceivers.add(userToCheck);
 					ui.newReceiverPic(userToCheck.getImage());
 					System.out.println(userToCheck.getName() + " är tillagd i mottagarlistan");
-					
+
 					return;
 
 				}
@@ -417,8 +417,7 @@ public class Client implements Serializable {
 	 * 
 	 * @param user
 	 *            Object to be checked for membership in list
-	 * @return  
-	 *            True if user is in the list, false if not.
+	 * @return True if user is in the list, false if not.
 	 */
 	public boolean isReceiver(User user) {
 		boolean isReceiver = false;

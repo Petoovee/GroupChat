@@ -7,11 +7,8 @@ import javax.swing.ImageIcon;
 
 /**
  * 
- * @author Antoine, Anton, Petar, Maida, Malin, Sara
- *   Klass 
+ * @author Antoine, Anton, Petar, Maida, Malin, Sara Klass
  */
-
-
 
 public class Message implements Serializable {
 	private static final long serialVersionUID = 1L;

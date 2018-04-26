@@ -40,7 +40,7 @@ public class ServerUI extends JPanel implements ActionListener {
 		list = new JList(model);
 		JScrollPane pane = new JScrollPane(list);
 		pane.setPreferredSize(new Dimension(150, 500));
-		
+
 		southPanel.setLayout(southGrid);
 		add(southPanel, BorderLayout.SOUTH);
 		add(pane, BorderLayout.EAST);
@@ -74,21 +74,21 @@ public class ServerUI extends JPanel implements ActionListener {
 			model.addElement(allUsers.get(i).getName());
 		}
 	}
-	
+
 	public void setLogArea(String log) {
 		logArea.setText(log);
 	}
-	
+
 	public void updateLog() {
 		logArea.setText("");
 		String startPoint = startDateField.getText();
 		String endPoint = endDateField.getText();
 		ArrayList<String> messagesList = server.getMessages(startPoint, endPoint);
-		for(int i = 0; i<messagesList.size(); i++) {
-			logArea.append(messagesList.get(i) +"\n");
+		for (int i = 0; i < messagesList.size(); i++) {
+			logArea.append(messagesList.get(i) + "\n");
 		}
 	}
-	
+
 	public void actionPerformed(ActionEvent arg0) {
 		updateLog();
 	}
