@@ -1,9 +1,16 @@
 package GroupChat;
 
 import java.io.Serializable;
-
 import javax.swing.ImageIcon;
 
+/**
+ * 
+ * @author Maida, Malin, Antoine, Anton, Petar, Sara
+ *
+ *         User-klass som representerar en anv�ndare i programmet, och
+ *         identifieras via namn + bild. Implementerar Serializable f�r att
+ *         kunna skickas i objektstr�mmar.
+ */
 public class User implements Serializable {
 	private String name;
 	private ImageIcon image;
@@ -40,5 +47,9 @@ public class User implements Serializable {
 
 	public User getUser() {
 		return user;
+	}
+
+	public String getImagePath() {
+		return image.toString();
 	}
 }
