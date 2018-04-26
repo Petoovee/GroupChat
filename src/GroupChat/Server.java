@@ -22,7 +22,7 @@ public class Server {
 	private Thread serverThread;
 	private LinkedList<ClientHandler> clients = new LinkedList<ClientHandler>();
 	private ClientRolf clientList = new ClientRolf();
-	private LinkedList<User> us = new LinkedList<User>();
+	private LinkedList<User> userList = new LinkedList<User>();
 	private ArrayList<User> allUsers = new ArrayList<User>();
 	private ArrayList<String> allMessages = new ArrayList<String>();
 	private int port = 5000;
@@ -58,7 +58,7 @@ public class Server {
 
 			try {
 				serverSocket = new ServerSocket(port);
-				System.out.println("Server startad");
+				System.out.println("Server started");
 			} catch (IOException e2) {
 				System.out.println("Could not listen to port");
 				System.exit(1);
@@ -87,7 +87,7 @@ public class Server {
 	public class ClientHandler implements Runnable {
 		private Socket socket;
 		private User user;
-		private ObjectOutputStream outToClient;
+		private ObjectOutputStream oos;
 
 		public ClientHandler(Socket socket) {
 			this.socket = socket;
@@ -107,8 +107,8 @@ public class Server {
 		 */
 		public void sendMessage(Message mess) {
 			try {
-				outToClient.writeObject(mess);
-				outToClient.flush();
+				oos.writeObject(mess);
+				oos.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -119,8 +119,8 @@ public class Server {
 		 */
 		public void sendOnlineUsers() {
 			try {
-				outToClient.writeObject(us.clone());
-				outToClient.flush();
+				oos.writeObject(userList.clone());
+				oos.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -136,10 +136,10 @@ public class Server {
 
 		public boolean isUserOnline(User userContact) {
 			boolean userOnline = false;
-			for (int i = 0; i < us.size(); i++) {
-				if (us.get(i).getName().equals(userContact.getName())) {
+			for (int i = 0; i < userList.size(); i++) {
+				if (userList.get(i).getName().equals(userContact.getName())) {
 					userOnline = true;
-					System.out.println("jämför " + (us.get(i).getName() + " och " + userContact.getName()));
+					System.out.println("jämför " + (userList.get(i).getName() + " och " + userContact.getName()));
 				}
 			}
 			return userOnline;
@@ -167,13 +167,13 @@ public class Server {
 		 */
 		public void run() {
 			try {
-				outToClient = new ObjectOutputStream(socket.getOutputStream());
-				ObjectInputStream inp = new ObjectInputStream(socket.getInputStream());
+				oos = new ObjectOutputStream(socket.getOutputStream());
+				ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
 				// Servern lyssnar efter objekt fr�n en inputstream med en �ppen tr�d ALL DE
 				// TIME.
 				while (!Thread.interrupted()) {
-					Object obj = inp.readObject();
+					Object obj = ois.readObject();
 					boolean userNameTaken = false;
 					boolean loggedIn = false;
 
@@ -202,12 +202,12 @@ public class Server {
 								}
 							}
 						}
-						outToClient.writeObject(acceptMessage);
+						oos.writeObject(acceptMessage);
 						if (!userNameTaken) {
 							allUsers.add(user);
 							System.out.println(user.getName() + " Ã¤r tillagd i systemet");
 							writeUsersToFile();
-							us.add(user);
+							userList.add(user);
 							clientList.put(user, this);
 							ui.setUserList();
 						}
@@ -234,8 +234,7 @@ public class Server {
 							}
 						}
 
-						int numberOfReceivers = newMessage.getReceivers().size();
-
+//						int numberOfReceivers = newMessage.getReceivers().size();
 //						for (int i = 0; i < numberOfReceivers; i++) {
 //							if (isUserOnline(newMessage.getReceivers().get(i))) {
 //								for (int o = 0; o < clients.size(); o++) {
@@ -270,9 +269,9 @@ public class Server {
 	 * @return
 	 */
 	public ClientHandler getReceiverHandler(User userCheck) {
-		for (int i = 0; i < us.size(); i++) {
-			if ((us.get(i).toString()).equals(userCheck.toString())) {
-				return clientList.get(us.get(i));
+		for (int i = 0; i < userList.size(); i++) {
+			if ((userList.get(i).toString()).equals(userCheck.toString())) {
+				return clientList.get(userList.get(i));
 			}
 		}
 		return null;
@@ -283,8 +282,8 @@ public class Server {
 	}
 	
 	public void sendOnlineUsersToClients() {
-		for(int i = 0; i<us.size(); i++) {
-			clientList.get(us.get(i)).sendOnlineUsers();
+		for(int i = 0; i<userList.size(); i++) {
+			clientList.get(userList.get(i)).sendOnlineUsers();
 		}
 	}
 	
@@ -331,11 +330,7 @@ public class Server {
 				writer.println(allUsers.get(i).getName() + "," + allUsers.get(i).getImage());
 			}
 			writer.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+		} catch (IOException e) {} 
 	}
 
 	/**
@@ -413,7 +408,6 @@ public class Server {
 		} catch (IOException e) {
 			System.out.println("readPersons: " + e);
 		}
-		// list = (ArrayList<User>) list.clone();
 		return allMess;
 	}
 
@@ -435,11 +429,7 @@ public class Server {
 			writer = new PrintWriter("files/offlineMessage.txt", "UTF-8");
 			writer.println(sender + "newStuff" + "receiver" + receiver + "newStuff" + message);
 			writer.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+		} catch (IOException e) {} 
 	}
 	
 	public static void main(String[] args) {

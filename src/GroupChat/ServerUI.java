@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 public class ServerUI extends JPanel implements ActionListener {
+	private static final long serialVersionUID = 3447627342492082985L;
 	private JList list;
 	private DefaultListModel model;
 

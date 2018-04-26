@@ -14,17 +14,18 @@ import javax.swing.ImageIcon;
 
 
 public class Message implements Serializable {
+	private static final long serialVersionUID = 865523503534228396L;
 	private String textMsg;
 	private ImageIcon image;
 	private User sender;
 	private ArrayList<User> receivers = new ArrayList<User>();
 	private String timeSent;
 	private String timeDelivered;
-	private Message mess;
+	private Message message;
 
-	public Message(String message, ImageIcon image, User sender, ArrayList<User> receivers) {
+	public Message(String textMsg, ImageIcon image, User sender, ArrayList<User> receivers) {
 
-		this.textMsg = message;
+		this.textMsg = textMsg;
 		this.image = image;
 		this.sender = sender;
 		this.receivers = receivers;
@@ -79,7 +80,7 @@ public class Message implements Serializable {
 	}
 
 	public Message getMessage() {
-		return mess;
+		return message;
 	}
 
 }

@@ -12,6 +12,10 @@ import javax.swing.ImageIcon;
  *         kunna skickas i objektstr�mmar.
  */
 public class User implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String name;
 	private ImageIcon image;
 	private User user;

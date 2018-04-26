@@ -24,7 +24,7 @@ public class Client implements Serializable {
 	private User user;
 	private Socket socket = null;
 	private User[] onlineUsers;
-	private ObjectOutputStream out;
+	private ObjectOutputStream oos;
 	private ClientUI ui;
 	private ArrayList<User> friends = new ArrayList<User>();
 	private ArrayList<User> currentReceivers = new ArrayList<User>();
@@ -71,8 +71,8 @@ public class Client implements Serializable {
 	public class Connect extends Thread {
 		private Client client;
 		private User user;
-		private Message massage;
-		private Thread threadRes;
+		private Message message;
+		private Thread receiverThread;
 
 		public Connect(Client client, User user) {
 			this.client = client;
@@ -84,15 +84,15 @@ public class Client implements Serializable {
 		public void run() {
 			try {
 				socket = new Socket("localhost", port);
-				out = new ObjectOutputStream(socket.getOutputStream());
+				oos = new ObjectOutputStream(socket.getOutputStream());
 
 				System.out.println("Klient kopplad till server");
 
-				threadRes = new ReceiveMessage();
-				threadRes.start();
+				receiverThread = new MessageReceiver();
+				receiverThread.start();
 
-				out.writeObject(user);
-				sendMessage(massage);
+				oos.writeObject(user);
+				sendMessage(message);
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -116,11 +116,11 @@ public class Client implements Serializable {
 	/*
 	 * Internal class for receiving messages, runs as a separate thread
 	 */
-	public class ReceiveMessage extends Thread {
+	public class MessageReceiver extends Thread {
 
 		ObjectInputStream in;
 
-		public ReceiveMessage() {
+		public MessageReceiver() {
 			try {
 				in = new ObjectInputStream(socket.getInputStream());
 			} catch (IOException e) {
@@ -223,8 +223,8 @@ public class Client implements Serializable {
 	 * Reads the friends file and returns the results as an ArrayList
 	 */
 	public ArrayList<User> getFriends() {
-		ArrayList<User> lawl = readFriends("files/friends.txt");
-		return lawl;
+		ArrayList<User> returnVal = readFriends("files/friends.txt");
+		return returnVal;
 
 	}
 
@@ -288,8 +288,8 @@ public class Client implements Serializable {
 	 */
 	public void sendMessage(Message message) {
 		try {
-			out.writeObject(message);
-			out.flush();
+			oos.writeObject(message);
+			oos.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

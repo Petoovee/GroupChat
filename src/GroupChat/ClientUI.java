@@ -25,7 +25,7 @@ public class ClientUI extends JFrame {
 	private JButton btnImage;
 	private JButton sendButton;
 	private Client client;
-	private static Message mess = new Message(null, null, null, null);
+	private static Message newMessage = new Message(null, null, null, null);
 	private String text = "";
 	private final TextArea contactList = new TextArea();
 	private final TextArea chatArea = new TextArea();
@@ -123,13 +123,13 @@ public class ClientUI extends JFrame {
 
 	public void imageButtonPressed() {
 
-		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 
-		int returnValue = jfc.showOpenDialog(null);
+		int returnValue = fileChooser.showOpenDialog(null);
 
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
-			File selectedFile = jfc.getSelectedFile();
-			mess = new Message(text, new ImageIcon(selectedFile.getAbsolutePath()), client.getUser(),
+			File selectedFile = fileChooser.getSelectedFile();
+			newMessage = new Message(text, new ImageIcon(selectedFile.getAbsolutePath()), client.getUser(),
 					client.getReceivers());
 
 		}
@@ -139,36 +139,35 @@ public class ClientUI extends JFrame {
 	public void sendButtonPressed() {
 
 		String text = messageField.getText();
-		mess = new Message(text, null, client.getUser(), client.getReceivers());
-		client.checkCommands(mess);
-		if (mess.getImage() != null) {
+		newMessage = new Message(text, null, client.getUser(), client.getReceivers());
+		client.checkCommands(newMessage);
+		if (newMessage.getImage() != null) {
 
-			mess.setTextMsg(text);
+			newMessage.setTextMsg(text);
 		} else {
 
 			if (text.equals(""))
 				return;
 
-			mess = new Message(text, null, client.getUser(), client.getReceivers());
+			newMessage = new Message(text, null, client.getUser(), client.getReceivers());
 
 		}
 
 		messageField.setText("");
-
-		// mess.setImage(null);
-		// mess.setTextMsg(null);
 	}
 
-	public void updateChatArea(Message mess) {
-
-		text += mess.getSender().getName() + ": " + mess.getTextMsg() + "\n";
-
-		if (mess.getImage() != null)
-			text += "" + mess.getImage() + "\n";
-		sentImage.setIcon(mess.getImage());
-
+	public void updateChatArea(Message newMessage) {
+		if (userLabel.getText() == newMessage.getSender().getName()) {
+			for (int i = 0; i > newMessage.getReceivers().size(); i++) {
+				text += newMessage.getReceivers().get(i).getName() + ": " + newMessage.getTextMsg() + "\n";
+			}
+		} else {
+			text += newMessage.getSender().getName() + ": " + newMessage.getTextMsg() + "\n";
+		}
+		if (newMessage.getImage() != null)
+			text += "" + newMessage.getImage() + "\n";
+		sentImage.setIcon(newMessage.getImage());
 		chatArea.setText(text);
-
 	}
 
 	public String getUserName() throws Exception {
