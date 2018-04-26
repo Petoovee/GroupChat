@@ -17,6 +17,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileSystemView;
 
 public class ClientUI extends JFrame {
+	private static final long serialVersionUID = 1L;
 	private ImageIcon image;
 	private JPanel contentPane = new JPanel();
 	private JLabel lblOnline;

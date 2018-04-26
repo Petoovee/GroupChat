@@ -14,7 +14,7 @@ import javax.swing.ImageIcon;
 
 
 public class Message implements Serializable {
-	private static final long serialVersionUID = 865523503534228396L;
+	private static final long serialVersionUID = 1L;
 	private String textMsg;
 	private ImageIcon image;
 	private User sender;

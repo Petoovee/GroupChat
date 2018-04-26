@@ -258,9 +258,11 @@ public class Server {
 				
 
 			} catch (IOException e) {
+				currentUsers.remove(user);
 				System.out.println("Could not read/write object");
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
+				currentUsers.remove(user);
 				e.printStackTrace();
 			}
 		}
