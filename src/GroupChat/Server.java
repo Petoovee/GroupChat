@@ -1,7 +1,10 @@
 package GroupChat;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -10,6 +13,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,7 +27,9 @@ public class Server {
 	private LinkedList<ClientHandler> clients = new LinkedList<ClientHandler>();
 	private ClientRolf clientList = new ClientRolf();
 	private LinkedList<User> userList = new LinkedList<User>();
+	private ArrayList<User> currentUsers = new ArrayList<User>();
 	private ArrayList<User> allUsers = new ArrayList<User>();
+	private ArrayList<User> oldUsers = new ArrayList<User>();
 	private ArrayList<String> allMessages = new ArrayList<String>();
 	private int port = 5000;
 	private ServerUI ui;
@@ -185,17 +191,17 @@ public class Server {
 						
 						
 						// kollar om användaren finns i systemet
-						for (int i = 0; i < allUsers.size(); i++) {
-							if (user.getName().equals(allUsers.get(i).getName())) {
+						for (int i = 0; i < currentUsers.size(); i++) {
+							if (user.getName().equals(currentUsers.get(i).getName())) {
 								System.out.println("logged1");
 								System.out.println(user.getName());
-								System.out.println(allUsers.get(i).getName());
+								System.out.println(currentUsers.get(i).getName());
 								userNameTaken = true;
 								Client.checkIfTaken(userNameTaken);
 								acceptMessage = new Message(null, null, null, null);
 
 								// kollar om bilden stämmer med namnet
-								if (user.getImagePath().equals(allUsers.get(i).getImagePath())) {
+								if (user.getImagePath().equals(currentUsers.get(i).getImagePath())) {
 									acceptMessage = new Message("accepted", null, null, null);
 									loggedIn = true;
 									System.out.println("logged");
@@ -204,7 +210,7 @@ public class Server {
 						}
 						oos.writeObject(acceptMessage);
 						if (!userNameTaken) {
-							allUsers.add(user);
+							currentUsers.add(user);
 							System.out.println(user.getName() + " Ã¤r tillagd i systemet");
 							writeUsersToFile();
 							userList.add(user);
@@ -277,8 +283,8 @@ public class Server {
 		return null;
 	}
 	
-	public ArrayList<User> getAllUsers(){
-		return allUsers;
+	public ArrayList<User> getCurrentUsers(){
+		return currentUsers;
 	}
 	
 	public void sendOnlineUsersToClients() {
@@ -319,18 +325,36 @@ public class Server {
 	}
 
 	/**
-	 * Skriver ned alla användare från användarlista till en textfil och sparar dem
+	 * Skriver ned alla användare från användarlistan till en textfil och sparar dem
 	 * med namn och bild.
 	 */
 	public void writeUsersToFile() {
-		PrintWriter writer;
 		try {
-			writer = new PrintWriter("files/users.txt", "UTF-8");
-			for (int i = 0; i < allUsers.size(); i++) {
-				writer.println(allUsers.get(i).getName() + "," + allUsers.get(i).getImage());
+			ObjectInputStream fileInput = new ObjectInputStream(new FileInputStream(new File("files/users.txt")));
+			oldUsers = (ArrayList<User>)fileInput.readObject();
+		} catch (IOException | ClassNotFoundException e1) {}
+		
+		for(int i = 0; i < currentUsers.size(); i++)
+		{
+			if(!allUsers.contains(currentUsers.get(i))) {
+				allUsers.add(currentUsers.get(i));
 			}
-			writer.close();
-		} catch (IOException e) {} 
+		}
+		
+		for(int i = 0; i < oldUsers.size(); i++)
+		{
+			if(!allUsers.contains(oldUsers.get(i))) {
+				allUsers.add(oldUsers.get(i));
+			}
+		}
+		
+		try {
+			ObjectOutputStream fileOutput = new ObjectOutputStream(new FileOutputStream(new File("files/users.txt")));
+			fileOutput.flush();
+			fileOutput.writeObject(allUsers);
+			fileOutput.flush();
+			fileOutput.close();
+		} catch (IOException e1) {}
 	}
 
 	/**

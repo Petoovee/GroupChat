@@ -69,7 +69,7 @@ public class ServerUI extends JPanel implements ActionListener {
 	}
 
 	public void setUserList() {
-		ArrayList<User> allUsers = server.getAllUsers();
+		ArrayList<User> allUsers = server.getCurrentUsers();
 		model.removeAllElements();
 		for (int i = 0; i < allUsers.size(); i++) {
 			model.addElement(allUsers.get(i).getName());

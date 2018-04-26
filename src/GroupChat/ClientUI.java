@@ -20,7 +20,7 @@ public class ClientUI extends JFrame {
 	private ImageIcon image;
 	private JPanel contentPane = new JPanel();
 	private JLabel lblOnline;
-	private JLabel lblOnlone;
+	private JLabel lblContacts;
 	private Label userLabel;
 	private JButton btnImage;
 	private JButton sendButton;
@@ -68,10 +68,10 @@ public class ClientUI extends JFrame {
 		userLabel.setBounds(10, -2, 346, 35);
 		contentPane.add(userLabel);
 
-		lblOnlone = new JLabel("Contacts");
-		lblOnlone.setHorizontalAlignment(SwingConstants.CENTER);
-		lblOnlone.setBounds(423, -2, 177, 30);
-		contentPane.add(lblOnlone);
+		lblContacts = new JLabel("Contacts");
+		lblContacts.setHorizontalAlignment(SwingConstants.CENTER);
+		lblContacts.setBounds(423, -2, 177, 30);
+		contentPane.add(lblContacts);
 
 		lblOnline = new JLabel("Online users");
 		lblOnline.setHorizontalAlignment(SwingConstants.CENTER);
