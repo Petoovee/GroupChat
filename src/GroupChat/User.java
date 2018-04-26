@@ -1,6 +1,7 @@
 package GroupChat;
 
 import java.io.Serializable;
+
 import javax.swing.ImageIcon;
 
 /**

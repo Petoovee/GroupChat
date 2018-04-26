@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 public class Client implements Serializable {
