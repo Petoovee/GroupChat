@@ -106,7 +106,6 @@ public class Client implements Serializable {
 	public void disconnect() {
 		try {
 			socket.close();
-			System.out.println("Disconnected from server");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -139,7 +138,8 @@ public class Client implements Serializable {
 						mess = (Message) obj;
 						if (mess.getSender() == null) {
 							if (mess.getTextMsg() == null) {
-								JOptionPane.showMessageDialog(null, "Ajabaja, fel lösenord!");
+								JOptionPane.showMessageDialog(null,
+										"Användaren finns redan i systemet, eller så har du skrivit in fel lösenord");
 								System.exit(1);
 							} else {
 								System.out.println("jag blev accepterad!");

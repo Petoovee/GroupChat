@@ -1,20 +1,18 @@
 package GroupChat;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import javax.swing.JFrame;
@@ -31,6 +29,7 @@ public class Server {
 	private int port = 5000;
 	private ServerUI ui;
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	private HashMap<String, Message> offlineMessages = new HashMap<String, Message>();
 
 	public Server() {
 		serverThread = new Connect();
@@ -144,7 +143,6 @@ public class Server {
 			for (int i = 0; i < userList.size(); i++) {
 				if (userList.get(i).getName().equals(userContact.getName())) {
 					userOnline = true;
-					System.out.println("jämför " + (userList.get(i).getName() + " och " + userContact.getName()));
 				}
 			}
 			return userOnline;
@@ -186,78 +184,74 @@ public class Server {
 					if (obj instanceof User) {
 						user = (User) obj;
 						Message acceptMessage = new Message("accepted", null, null, null);
-						System.out.println(user.getImagePath());
-
+						Message declineMessage = new Message(null, null, null, null);
 						// kollar om användaren finns i systemet
 						for (int i = 0; i < currentUsers.size(); i++) {
 							if (user.getName().equals(currentUsers.get(i).getName())) {
-								System.out.println("logged1");
-								System.out.println(user.getName());
-								System.out.println(currentUsers.get(i).getName());
 								userNameTaken = true;
-								Client.checkIfTaken(userNameTaken);
-								acceptMessage = new Message(null, null, null, null);
 
 								// kollar om bilden stämmer med namnet
 								if (user.getImagePath().equals(currentUsers.get(i).getImagePath())) {
-									acceptMessage = new Message("accepted", null, null, null);
 									loggedIn = true;
-									System.out.println("logged");
 								}
 							}
 						}
-						oos.writeObject(acceptMessage);
-						if (!userNameTaken) {
+
+						if (!userNameTaken || loggedIn) {
 							currentUsers.add(user);
-							System.out.println(user.getName() + " Ã¤r tillagd i systemet");
-							writeUsersToFile();
 							userList.add(user);
+							writeUsersToFile();
 							clientList.put(user, this);
+							oos.writeObject(acceptMessage);
 							ui.setUserList();
-						}
-						if (loggedIn) {
-							Message[] offlineMessage = getOfflineMessage(user);
-							for (int i = 0; i < offlineMessage.length; i++) {
-								sendMessage(offlineMessage[i]);
+							if (offlineMessages.containsKey(user.getName())) {
+								sendMessage(offlineMessages.get(user.getName()));
 							}
+						} else {
+							oos.writeObject(declineMessage);
 						}
 						sendOnlineUsersToClients();
 
 					} else if (obj instanceof Message) {
 						Message newMessage = (Message) obj;
 						Date date = new Date();
+						newMessage.setDate(dateFormat.format(date));
+
 						allMessages.add(dateFormat.format(date) + " " + newMessage.getSender().getName() + ": "
 								+ newMessage.getTextMsg());
-
 						for (int i = 0; i < newMessage.getReceivers().size(); i++) {
 							if (isUserOnline(newMessage.getReceivers().get(i))) {
 								getReceiverHandler(newMessage.getReceivers().get(i)).sendMessage(newMessage);
 							} else {
-								writeOfflineMessageToFile(newMessage.getSender().getName(),
-										newMessage.getReceivers().get(i).getName(), newMessage.getTextMsg());
+								offlineMessages.put(newMessage.getReceivers().get(i).getName(), newMessage);
 							}
 						}
 
-						// int numberOfReceivers = newMessage.getReceivers().size();
-						// for (int i = 0; i < numberOfReceivers; i++) {
-						// if (isUserOnline(newMessage.getReceivers().get(i))) {
-						// for (int o = 0; o < clients.size(); o++) {
-						// clients.get(o).sendOnlineUsers();
-						// }
-						// } else {
-						// writeOfflineMessageToFile(newMessage.getSender().getName(),
-						// newMessage.getReceivers().get(i).getName(), newMessage.getTextMsg());
-						// }
-						// }
+						int numberOfReceivers = newMessage.getReceivers().size();
+						for (int i = 0; i < numberOfReceivers; i++) {
+							if (isUserOnline(newMessage.getReceivers().get(i))) {
+								for (int o = 0; o < clients.size(); o++) {
+									System.out.println("");
+								}
+							} else {
+								offlineMessages.put(newMessage.getReceivers().get(i).getName(), newMessage);
+							}
+						}
 					}
-					currentUsers.remove(user); // Hopefully this won't cause invisible users, since it's ran when
-												// interrupted
+					currentUsers.remove(user);
 					obj = null;
 				}
 
 			} catch (IOException e) {
 				currentUsers.remove(user);
+				removeUserFromUserList(user);
+				clientList.remover(user);
 				System.out.println("Could not read/write object");
+				try {
+					Thread.currentThread().join();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				currentUsers.remove(user);
@@ -283,13 +277,26 @@ public class Server {
 		return null;
 	}
 
+	public void removeUserFromUserList(User user) {
+		for (int i = 0; i < userList.size(); i++) {
+			System.out.println(user.getName());
+			System.out.println(userList.get(i).getName());
+
+			if (user.getName().equals(userList.get(i).getName())) {
+				userList.remove(i);
+			}
+		}
+	}
+
 	public ArrayList<User> getCurrentUsers() {
 		return currentUsers;
 	}
 
 	public void sendOnlineUsersToClients() {
 		for (int i = 0; i < userList.size(); i++) {
-			clientList.get(userList.get(i)).sendOnlineUsers();
+			if (userList.get(i) != null) {
+				clientList.get(userList.get(i)).sendOnlineUsers();
+			}
 		}
 	}
 
@@ -358,106 +365,6 @@ public class Server {
 			fileOutput.flush();
 			fileOutput.close();
 		} catch (IOException e1) {
-		}
-	}
-
-	/**
-	 * Kollar om användaren som metoden får in i parametern fått några meddelande
-	 * som offline. Om användaren fått meddelande lägger den in meddelandet i en
-	 * array och returnerar sedan arrayen när den hämtat alla meddelanden.
-	 * 
-	 * @param user
-	 *            == användare som metoden kollar ifall den har fått meddelande
-	 * @return En Message-array med alla meddelande som man user fått när den varit
-	 *         offline
-	 */
-
-	/**
-	 * Hämtar osända meddelanden och returnerar dessa till dess rättmätiga
-	 * mottagare. Läser antal meddelanden som skall skickas via en annan metod som i
-	 * sig hämtar meddelanden från en textfil, och matchar rätt sändare och
-	 * mottagare med sparade Message-objekt.
-	 * 
-	 * @param user
-	 *            Användare som de osända meddelanden ska levereras till.
-	 * 
-	 * @return
-	 */
-
-	public Message[] getOfflineMessage(User user) {
-		String[] parts = readOfflineMessages().split("newStuff");
-		String offlineMess = "";
-		String senderName = "";
-		int amountOfMessages = 0;
-		for (int i = 0; i < parts.length; i++) {
-			String userName = "receiver" + user.getName();
-			if (parts[i].equals(userName)) {
-				amountOfMessages++;
-			}
-		}
-		Message[] offlineMessage = new Message[amountOfMessages];
-		int messageIndex = 0;
-
-		for (int i = 0; i < parts.length; i++) {
-			String userName = "receiver" + user.getName();
-			if (parts[i].equals(userName)) {
-				offlineMess = parts[i + 1];
-				senderName = parts[i - 1];
-				User sender = new User(senderName, null);
-				ArrayList<User> users = new ArrayList<User>();
-				users.add(user);
-				offlineMessage[messageIndex] = new Message(offlineMess, null, sender, users);
-				messageIndex++;
-			}
-		}
-		return offlineMessage;
-	}
-
-	/**
-	 * Läser en textfil av oskickade meddelanden med en BufferedReader och skriver
-	 * över dem i en sträng som returneras.
-	 * 
-	 * @return Sträng med oskickade meddelanden
-	 * 
-	 */
-	public static String readOfflineMessages() {
-		// ArrayList<User> list = new ArrayList<User>();
-		String allMess = "";
-		try {
-			String filename = "files/offlineMessage.txt";
-			BufferedReader br = new BufferedReader(new FileReader(filename));
-			String str = br.readLine();
-
-			while (str != null) {
-				allMess += str;
-				str = br.readLine();
-			}
-			br.close();
-		} catch (IOException e) {
-			System.out.println("readPersons: " + e);
-		}
-		return allMess;
-	}
-
-	/**
-	 * Skriver meddelande till en fil som senare ska läsas av readOfflineMessages().
-	 * Den sepparerar de olika delarn (sender, receiver, message) genom att skriva
-	 * "newStuff" emellan dom.
-	 * 
-	 * @param sender
-	 *            == User som skickade meddelandet
-	 * @param receiver
-	 *            == User som meddelandet ska till
-	 * @param message
-	 *            == meddelandet som en sträng
-	 */
-	public void writeOfflineMessageToFile(String sender, String receiver, String message) {
-		PrintWriter writer;
-		try {
-			writer = new PrintWriter("files/offlineMessage.txt", "UTF-8");
-			writer.println(sender + "newStuff" + "receiver" + receiver + "newStuff" + message);
-			writer.close();
-		} catch (IOException e) {
 		}
 	}
 

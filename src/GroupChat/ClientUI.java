@@ -18,7 +18,7 @@ import javax.swing.filechooser.FileSystemView;
 
 public class ClientUI extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private ImageIcon image;
+	private ImageIcon profileImage;
 	private JPanel contentPane = new JPanel();
 	private JLabel lblOnline;
 	private JLabel lblContacts;
@@ -124,15 +124,15 @@ public class ClientUI extends JFrame {
 
 	public void imageButtonPressed() {
 
-		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView());
 
 		int returnValue = fileChooser.showOpenDialog(null);
 
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			File selectedFile = fileChooser.getSelectedFile();
-			newMessage = new Message(text, new ImageIcon(selectedFile.getAbsolutePath()), client.getUser(),
-					client.getReceivers());
+			ImageIcon chosenImage = new ImageIcon(selectedFile.getAbsolutePath());
 
+			newMessage.setImage(chosenImage);
 		}
 
 	}
@@ -140,21 +140,19 @@ public class ClientUI extends JFrame {
 	public void sendButtonPressed() {
 
 		String text = messageField.getText();
-		newMessage = new Message(text, null, client.getUser(), client.getReceivers());
-		client.checkCommands(newMessage);
-		if (newMessage.getImage() != null) {
+		ImageIcon image = newMessage.getImage();
 
+		newMessage = new Message(text, image, client.getUser(), client.getReceivers());
+
+		if (image != null) {
 			newMessage.setTextMsg(text);
 		} else {
-
-			if (text.equals(""))
+			if (text.isEmpty() || text == null)
 				return;
-
-			newMessage = new Message(text, null, client.getUser(), client.getReceivers());
-
+			newMessage.setImage(null);
 		}
-
 		messageField.setText("");
+		client.checkCommands(newMessage);
 	}
 
 	public void updateChatArea(Message newMessage) {
@@ -163,11 +161,13 @@ public class ClientUI extends JFrame {
 				text += newMessage.getReceivers().get(i).getName() + ": " + newMessage.getTextMsg() + "\n";
 			}
 		} else {
-			text += newMessage.getSender().getName() + ": " + newMessage.getTextMsg() + "\n";
+			text += newMessage.getDate() + " " + newMessage.getSender().getName() + ": " + newMessage.getTextMsg()
+					+ "\n";
 		}
-		if (newMessage.getImage() != null)
-			text += "" + newMessage.getImage() + "\n";
-		sentImage.setIcon(newMessage.getImage());
+		if (newMessage.getImage() != null) {
+			sentImage.setIcon(newMessage.getImage());
+		}
+
 		chatArea.setText(text);
 	}
 
@@ -190,12 +190,12 @@ public class ClientUI extends JFrame {
 
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			File selectedFile = jfc.getSelectedFile();
-			image = new ImageIcon(selectedFile.getAbsolutePath());
+			profileImage = new ImageIcon(selectedFile.getAbsolutePath());
 		}
 
-		userProfilePic.setIcon(image);
+		userProfilePic.setIcon(profileImage);
 
-		return image;
+		return profileImage;
 	}
 
 	public void updateOnlineUsers() {

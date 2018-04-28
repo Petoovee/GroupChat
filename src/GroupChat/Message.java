@@ -19,6 +19,7 @@ public class Message implements Serializable {
 	private String timeSent;
 	private String timeDelivered;
 	private Message message;
+	private String date;
 
 	public Message(String textMsg, ImageIcon image, User sender, ArrayList<User> receivers) {
 
@@ -78,6 +79,14 @@ public class Message implements Serializable {
 
 	public Message getMessage() {
 		return message;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
+	}
+
+	public String getDate() {
+		return date;
 	}
 
 }

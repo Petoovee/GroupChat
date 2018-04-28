@@ -22,7 +22,7 @@ public class ServerUI extends JPanel implements ActionListener {
 
 	private JPanel southPanel = new JPanel();
 	private final TextArea logArea = new TextArea();
-	private JLabel startDateLabel = new JLabel("          Visa logg frÃ¥n: yyyy/mm/dd");
+	private JLabel startDateLabel = new JLabel("          Visa logg från: yyyy/mm/dd");
 	private JLabel endDateLabel = new JLabel("           Visa logg till: yyyy/mm/dd");
 	private JLabel emptyLabel = new JLabel("");
 	private final TextArea startDateField = new TextArea();
