@@ -203,12 +203,16 @@ public class Server {
 							writeUsersToFile();
 							clientList.put(user, this);
 							oos.writeObject(acceptMessage);
+							oos.flush();
+							oos.reset();
 							ui.setUserList();
 							if (offlineMessages.containsKey(user.getName())) {
 								sendMessage(offlineMessages.get(user.getName()));
 							}
 						} else {
 							oos.writeObject(declineMessage);
+							oos.flush();
+							oos.reset();
 						}
 						sendOnlineUsersToClients();
 

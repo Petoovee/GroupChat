@@ -91,6 +91,8 @@ public class Client implements Serializable {
 				receiverThread.start();
 
 				oos.writeObject(user);
+				oos.flush();
+				oos.reset();
 				sendMessage(message);
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
