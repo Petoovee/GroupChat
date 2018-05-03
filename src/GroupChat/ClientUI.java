@@ -124,7 +124,7 @@ public class ClientUI extends JFrame {
 
 	public void imageButtonPressed() {
 
-		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView());
+		JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 
 		int returnValue = fileChooser.showOpenDialog(null);
 
@@ -144,7 +144,7 @@ public class ClientUI extends JFrame {
 
 		newMessage = new Message(text, image, client.getUser(), client.getReceivers());
 
-		if (image != null) {
+		if (newMessage.getImage() != null) {
 			newMessage.setTextMsg(text);
 		} else {
 			if (text.isEmpty() || text == null)

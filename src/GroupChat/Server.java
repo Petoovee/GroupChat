@@ -12,7 +12,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 import javax.swing.JFrame;
@@ -27,9 +26,9 @@ public class Server {
 	private ArrayList<User> oldUsers = new ArrayList<User>();
 	private ArrayList<String> allMessages = new ArrayList<String>();
 	private int port = 5000;
-	private ServerUI ui;
+	private ServerUI serverUI;
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-	private HashMap<String, Message> offlineMessages = new HashMap<String, Message>();
+	private OfflineMessages offlineMessages = new OfflineMessages();
 
 	public Server() {
 		serverThread = new Connect();
@@ -43,7 +42,7 @@ public class Server {
 	 *            == ServerUI
 	 */
 	public void setUI(ServerUI ui) {
-		this.ui = ui;
+		this.serverUI = ui;
 	}
 
 	/**
@@ -86,7 +85,8 @@ public class Server {
 	 * 
 	 * @author Anton, Petar, Maida, Malin, Antoine, Sara
 	 * 
-	 *         Klass med en tråd som sköter kommunikationen till och från klienten
+	 *         Klass med en tråd som sköter kommunikationen till och från
+	 *         klienten
 	 */
 	public class ClientHandler implements Runnable {
 		private Socket socket;
@@ -119,7 +119,8 @@ public class Server {
 		}
 
 		/**
-		 * Skickas vidare en kopia av en lista av användare som är online till klienten.
+		 * Skickas vidare en kopia av en lista av användare som är online till
+		 * klienten.
 		 */
 		public void sendOnlineUsers() {
 			try {
@@ -152,19 +153,19 @@ public class Server {
 		 * Servern lyssnar efter objekt från en inputstream med en öppen tråd,
 		 * kontinuerligt.
 		 * 
-		 * Om objekt är User kollar servern ifall användarnamnet redan är taget. Om namn
-		 * inte är taget läggs användaren till i användarlista, och till en fil med
-		 * användarlista.
+		 * Om objekt är User kollar servern ifall användarnamnet redan är taget. Om
+		 * namn inte är taget läggs användaren till i användarlista, och till en fil
+		 * med användarlista.
 		 * 
-		 * Är användarnamnet redan taget, och den valda profilbilden inte matchar Userns
-		 * användarnamn, så måste man "logga in" igen med nytt namn och bild.
+		 * Är användarnamnet redan taget, och den valda profilbilden inte matchar
+		 * Userns användarnamn, så måste man "logga in" igen med nytt namn och bild.
 		 * 
 		 * Är användarnamnet redan taget kollar servern om den valda profilbilden
-		 * matchar Usern med samma användarnamn, och "loggar in" ifall de matchar. Usern
-		 * får då osända meddelanden som skickats när hen varit offline.
+		 * matchar Usern med samma användarnamn, och "loggar in" ifall de matchar.
+		 * Usern får då osända meddelanden som skickats när hen varit offline.
 		 * 
-		 * Om objekt är Message kontrollerar servern vem sändaren är och vem mottagaren
-		 * är, och skickar det rätt utefter den informationen.
+		 * Om objekt är Message kontrollerar servern vem sändaren är och vem
+		 * mottagaren är, och skickar det rätt utefter den informationen.
 		 *
 		 *
 		 */
@@ -173,7 +174,8 @@ public class Server {
 				oos = new ObjectOutputStream(socket.getOutputStream());
 				ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
-				// Servern lyssnar efter objekt fr�n en inputstream med en �ppen tr�d ALL DE
+				// Servern lyssnar efter objekt fr�n en inputstream med en �ppen tr�d ALL
+				// DE
 				// TIME.
 				while (!Thread.interrupted()) {
 					Object obj = ois.readObject();
@@ -184,35 +186,43 @@ public class Server {
 					if (obj instanceof User) {
 						user = (User) obj;
 						Message acceptMessage = new Message("accepted", null, null, null);
-						Message declineMessage = new Message(null, null, null, null);
+
 						// kollar om användaren finns i systemet
 						for (int i = 0; i < currentUsers.size(); i++) {
 							if (user.getName().equals(currentUsers.get(i).getName())) {
 								userNameTaken = true;
+								Client.checkIfTaken(userNameTaken);
+								acceptMessage = new Message(null, null, null, null);
 
 								// kollar om bilden stämmer med namnet
 								if (user.getImagePath().equals(currentUsers.get(i).getImagePath())) {
+									acceptMessage = new Message("accepted", null, null, null);
 									loggedIn = true;
 								}
 							}
 						}
 
-						if (!userNameTaken || loggedIn) {
+						if (!userNameTaken) {
+							currentUsers.add(user);
+							System.out.println(user.getName() + " Ã¤r tillagd i systemet");
+							// writeUsersToFile();
+							userList.add(user);
+							clientList.put(user, this);
+							serverUI.setUserList();
+							oos.writeObject(acceptMessage);
+						}
+						if (loggedIn) {
 							currentUsers.add(user);
 							userList.add(user);
-							writeUsersToFile();
 							clientList.put(user, this);
 							oos.writeObject(acceptMessage);
-							oos.flush();
-							oos.reset();
-							ui.setUserList();
-							if (offlineMessages.containsKey(user.getName())) {
-								sendMessage(offlineMessages.get(user.getName()));
+							serverUI.setUserList();
+							if (offlineMessages.contains(user.getName())) {
+								for (int i = 0; i < offlineMessages.get(user.getName()).size(); i++) {
+									sendMessage(offlineMessages.get(user.getName()).get(i));
+								}
+								offlineMessages.remove(user.getName());
 							}
-						} else {
-							oos.writeObject(declineMessage);
-							oos.flush();
-							oos.reset();
 						}
 						sendOnlineUsersToClients();
 
@@ -224,19 +234,9 @@ public class Server {
 						allMessages.add(dateFormat.format(date) + " " + newMessage.getSender().getName() + ": "
 								+ newMessage.getTextMsg());
 						for (int i = 0; i < newMessage.getReceivers().size(); i++) {
+							// Om receiver är online skickas meddelandet
 							if (isUserOnline(newMessage.getReceivers().get(i))) {
 								getReceiverHandler(newMessage.getReceivers().get(i)).sendMessage(newMessage);
-							} else {
-								offlineMessages.put(newMessage.getReceivers().get(i).getName(), newMessage);
-							}
-						}
-
-						int numberOfReceivers = newMessage.getReceivers().size();
-						for (int i = 0; i < numberOfReceivers; i++) {
-							if (isUserOnline(newMessage.getReceivers().get(i))) {
-								for (int o = 0; o < clients.size(); o++) {
-									System.out.println("");
-								}
 							} else {
 								offlineMessages.put(newMessage.getReceivers().get(i).getName(), newMessage);
 							}
@@ -281,7 +281,7 @@ public class Server {
 		return null;
 	}
 
-	public void removeUserFromUserList(User user) {
+	public synchronized void removeUserFromUserList(User user) {
 		for (int i = 0; i < userList.size(); i++) {
 			System.out.println(user.getName());
 			System.out.println(userList.get(i).getName());
@@ -340,9 +340,10 @@ public class Server {
 	}
 
 	/**
-	 * Skriver ned alla användare från användarlistan till en textfil och sparar dem
-	 * med namn och bild.
+	 * Skriver ned alla användare från användarlistan till en textfil och sparar
+	 * dem med namn och bild.
 	 */
+	@SuppressWarnings("unchecked")
 	public void writeUsersToFile() {
 		try {
 			ObjectInputStream fileInput = new ObjectInputStream(new FileInputStream(new File("files/users.txt")));

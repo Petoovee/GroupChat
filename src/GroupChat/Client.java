@@ -77,7 +77,6 @@ public class Client implements Serializable {
 			this.client = client;
 			this.user = user;
 			friends = readFriends("files/friends.txt");
-
 		}
 
 		public void run() {
@@ -91,8 +90,6 @@ public class Client implements Serializable {
 				receiverThread.start();
 
 				oos.writeObject(user);
-				oos.flush();
-				oos.reset();
 				sendMessage(message);
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
@@ -140,8 +137,7 @@ public class Client implements Serializable {
 						mess = (Message) obj;
 						if (mess.getSender() == null) {
 							if (mess.getTextMsg() == null) {
-								JOptionPane.showMessageDialog(null,
-										"Användaren finns redan i systemet, eller så har du skrivit in fel lösenord");
+								JOptionPane.showMessageDialog(null, "Ajabaja, fel lösenord!");
 								System.exit(1);
 							} else {
 								System.out.println("jag blev accepterad!");
@@ -324,20 +320,18 @@ public class Client implements Serializable {
 	}
 
 	public static void main(String[] args) {
-		// Server server = new Server();
 		ClientUI ui = new ClientUI();
-		// ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		ui.setVisible(true);
 		Client client = new Client(ui);
 
 		ClientUI ui2 = new ClientUI();
-		// ui2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		ui2.setVisible(true);
 		Client client2 = new Client(ui2);
 	}
 
 	/*
 	 * Checks the given message for possible commands and executes those
+	 * Supported commands are "/remove", "/send", "/add", "/clear"
 	 */
 	public void checkCommands(Message message) {
 		String check = message.getTextMsg();
@@ -361,23 +355,31 @@ public class Client implements Serializable {
 			check = check.replace("/add ", "");
 			for (int i = 0; i < onlineUsers.length; i++) {
 				if (onlineUsers[i] != null && onlineUsers[i].getName().equals(check)) {
-					if (!readFriends("files/friends.txt").contains(onlineUsers[i])) {
-						addFriend(onlineUsers[i]);
-						ui.updateContacts();
-						return;
+					for (int j = 0; j < friends.size(); j++) {
+						if (!friends.get(j).getName().equals(check)) {
+							addFriend(onlineUsers[i]);
+							ui.updateContacts();
+							return;
+						}
 					}
 				}
 			}
-
 		}
 
 		// check if user typed /send <User>
-		else if (check.contains("/send ")) {
+		else if (check.contains("/send "))
+
+		{
 			check = check.replace("/send ", "");
 
-			for (int i = 0; i < friends.size(); i++) {
+			for (
 
+					int i = 0; i < friends.size(); i++) {
 				User userToCheck = friends.get(i);
+
+				if (check.equals(this.user.getName())) {
+					return;
+				}
 
 				if (userToCheck.getName().equals(check)) {
 
@@ -387,21 +389,20 @@ public class Client implements Serializable {
 
 						return;
 					}
-
 					currentReceivers.add(userToCheck);
 					ui.newReceiverPic(userToCheck.getImage());
 					System.out.println(userToCheck.getName() + " är tillagd i mottagarlistan");
-
 					return;
-
 				}
 			}
-
 		}
 
 		else if (check.contains("/clear ")) {
 			check = check.replace("/clear ", "");
 			for (int i = 0; i < onlineUsers.length; i++) {
+				if (isReceiver(this.user)) {
+					return;
+				}
 				if (onlineUsers[i].getName().equals(check)) {
 					clearReceiver(onlineUsers[i]);
 					ui.removeReceiverPic(onlineUsers[i].getImage());
