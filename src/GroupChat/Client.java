@@ -360,6 +360,8 @@ public class Client implements Serializable {
 							addFriend(onlineUsers[i]);
 							ui.updateContacts();
 							return;
+						} else {
+							sendMessage(new Message("Finns redan i listan!", null, null, null));
 						}
 					}
 				}
@@ -400,7 +402,7 @@ public class Client implements Serializable {
 		else if (check.contains("/clear ")) {
 			check = check.replace("/clear ", "");
 			for (int i = 0; i < onlineUsers.length; i++) {
-				if (isReceiver(this.user)) {
+				if (check.equals(this.user.getName())) {
 					return;
 				}
 				if (onlineUsers[i].getName().equals(check)) {
