@@ -229,10 +229,18 @@ public class Client implements Serializable {
 	 * Adds the given user as a friend and saves the changes to the friends file
 	 */
 	public void addFriend(User newFriend) {
-
-		friends.add(newFriend);
-		System.out.println(newFriend.getName() + " �r tillagd i kontakter");
-		writeFriendsToFile();
+		boolean existingFriend = false;
+		for (int i = 0; i < friends.size(); i++) {
+			if (friends.get(i).getName() == newFriend.getName()) {
+				existingFriend = true;
+				System.out.println("Already friended that friend!");
+			}
+		}
+		if (!existingFriend) {
+			friends.add(newFriend);
+			System.out.println(newFriend.getName() + " was added to friends");
+			writeFriendsToFile();
+		}
 	}
 
 	/*
@@ -330,8 +338,8 @@ public class Client implements Serializable {
 	}
 
 	/*
-	 * Checks the given message for possible commands and executes those
-	 * Supported commands are "/remove", "/send", "/add", "/clear"
+	 * Checks the given message for possible commands and executes those Supported
+	 * commands are "/remove", "/send", "/add", "/clear"
 	 */
 	public void checkCommands(Message message) {
 		String check = message.getTextMsg();
@@ -355,15 +363,8 @@ public class Client implements Serializable {
 			check = check.replace("/add ", "");
 			for (int i = 0; i < onlineUsers.length; i++) {
 				if (onlineUsers[i] != null && onlineUsers[i].getName().equals(check)) {
-					for (int j = 0; j < friends.size(); j++) {
-						if (!friends.get(j).getName().equals(check)) {
-							addFriend(onlineUsers[i]);
-							ui.updateContacts();
-							return;
-						} else {
-							sendMessage(new Message("Finns redan i listan!", null, null, null));
-						}
-					}
+					addFriend(onlineUsers[i]);
+					ui.updateContacts();
 				}
 			}
 		}
