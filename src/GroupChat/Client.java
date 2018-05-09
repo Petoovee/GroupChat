@@ -331,10 +331,6 @@ public class Client implements Serializable {
 		ClientUI ui = new ClientUI();
 		ui.setVisible(true);
 		Client client = new Client(ui);
-
-		ClientUI ui2 = new ClientUI();
-		ui2.setVisible(true);
-		Client client2 = new Client(ui2);
 	}
 
 	/*

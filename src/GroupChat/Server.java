@@ -61,7 +61,7 @@ public class Server {
 
 			try {
 				serverSocket = new ServerSocket(port);
-				System.out.println("Server started");
+				System.out.println("Server started on port: " +port);
 			} catch (IOException e2) {
 				System.out.println("Could not listen to port");
 				System.exit(1);
@@ -72,7 +72,7 @@ public class Server {
 
 					socket = serverSocket.accept();
 					ClientHandler ch = new ClientHandler(socket);
-					new Thread(ch).start();
+					ch.start();
 
 				} catch (IOException e1) {
 					System.out.println("Accept failed on port");
@@ -85,13 +85,13 @@ public class Server {
 	 * 
 	 * @author Anton, Petar, Maida, Malin, Antoine, Sara
 	 * 
-	 *         Klass med en tråd som sköter kommunikationen till och från
-	 *         klienten
+	 *         Klass med en tråd som sköter kommunikationen till och från klienten
 	 */
-	public class ClientHandler implements Runnable {
+	public class ClientHandler extends Thread {
 		private Socket socket;
 		private User user;
 		private ObjectOutputStream oos;
+		private ObjectInputStream ois;
 
 		public ClientHandler(Socket socket) {
 			this.socket = socket;
@@ -119,8 +119,7 @@ public class Server {
 		}
 
 		/**
-		 * Skickas vidare en kopia av en lista av användare som är online till
-		 * klienten.
+		 * Skickas vidare en kopia av en lista av användare som är online till klienten.
 		 */
 		public void sendOnlineUsers() {
 			try {
@@ -153,26 +152,26 @@ public class Server {
 		 * Servern lyssnar efter objekt från en inputstream med en öppen tråd,
 		 * kontinuerligt.
 		 * 
-		 * Om objekt är User kollar servern ifall användarnamnet redan är taget. Om
-		 * namn inte är taget läggs användaren till i användarlista, och till en fil
-		 * med användarlista.
+		 * Om objekt är User kollar servern ifall användarnamnet redan är taget. Om namn
+		 * inte är taget läggs användaren till i användarlista, och till en fil med
+		 * användarlista.
 		 * 
-		 * Är användarnamnet redan taget, och den valda profilbilden inte matchar
-		 * Userns användarnamn, så måste man "logga in" igen med nytt namn och bild.
+		 * Är användarnamnet redan taget, och den valda profilbilden inte matchar Userns
+		 * användarnamn, så måste man "logga in" igen med nytt namn och bild.
 		 * 
 		 * Är användarnamnet redan taget kollar servern om den valda profilbilden
-		 * matchar Usern med samma användarnamn, och "loggar in" ifall de matchar.
-		 * Usern får då osända meddelanden som skickats när hen varit offline.
+		 * matchar Usern med samma användarnamn, och "loggar in" ifall de matchar. Usern
+		 * får då osända meddelanden som skickats när hen varit offline.
 		 * 
-		 * Om objekt är Message kontrollerar servern vem sändaren är och vem
-		 * mottagaren är, och skickar det rätt utefter den informationen.
+		 * Om objekt är Message kontrollerar servern vem sändaren är och vem mottagaren
+		 * är, och skickar det rätt utefter den informationen.
 		 *
 		 *
 		 */
 		public void run() {
 			try {
 				oos = new ObjectOutputStream(socket.getOutputStream());
-				ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+				ois = new ObjectInputStream(socket.getInputStream());
 
 				// Servern lyssnar efter objekt fr�n en inputstream med en �ppen tr�d ALL
 				// DE
@@ -204,7 +203,7 @@ public class Server {
 
 						if (!userNameTaken) {
 							currentUsers.add(user);
-							System.out.println(user.getName() + " Ã¤r tillagd i systemet");
+							System.out.println(user.getName() + " came online");
 							// writeUsersToFile();
 							userList.add(user);
 							clientList.put(user, this);
@@ -246,20 +245,21 @@ public class Server {
 					obj = null;
 				}
 
-			} catch (IOException e) {
+			} catch (ClassNotFoundException | IOException e) {
+				try {
+					ois.close();
+					oos.close();
+					socket.close();
+				} catch (IOException e2) {
+					System.out.println("Clienthandler could not close streams, is this even possible?");
+				}
+				System.out.println("Something happened to client streams! Shutting down handler!");
 				currentUsers.remove(user);
 				removeUserFromUserList(user);
 				clientList.remover(user);
-				System.out.println("Could not read/write object");
-				try {
-					Thread.currentThread().join();
-				} catch (InterruptedException e1) {
-					e1.printStackTrace();
-				}
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				currentUsers.remove(user);
-				e.printStackTrace();
+				sendOnlineUsersToClients();
+				serverUI.setUserList();
+				this.interrupt();
 			}
 		}
 	}
@@ -282,10 +282,8 @@ public class Server {
 	}
 
 	public synchronized void removeUserFromUserList(User user) {
+		System.out.println("Removing " +user.getName());
 		for (int i = 0; i < userList.size(); i++) {
-			System.out.println(user.getName());
-			System.out.println(userList.get(i).getName());
-
 			if (user.getName().equals(userList.get(i).getName())) {
 				userList.remove(i);
 			}
@@ -340,14 +338,15 @@ public class Server {
 	}
 
 	/**
-	 * Skriver ned alla användare från användarlistan till en textfil och sparar
-	 * dem med namn och bild.
+	 * Skriver ned alla användare från användarlistan till en textfil och sparar dem
+	 * med namn och bild.
 	 */
 	@SuppressWarnings("unchecked")
 	public void writeUsersToFile() {
 		try {
 			ObjectInputStream fileInput = new ObjectInputStream(new FileInputStream(new File("files/users.txt")));
 			oldUsers = (ArrayList<User>) fileInput.readObject();
+			fileInput.close();
 		} catch (IOException | ClassNotFoundException e1) {
 		}
 
