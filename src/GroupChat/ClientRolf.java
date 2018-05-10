@@ -14,7 +14,6 @@ public class ClientRolf {
 
 	public synchronized void put(User user, ClientHandler client) {
 		clients.put(user, client);
-		System.out.println(clients.size());
 	}
 
 	public synchronized ClientHandler get(User user) {
